@@ -56,6 +56,7 @@ public class GitHubServer {
         });
 
         server.start();
-        System.out.println("🚀 Server started on port 9090");
+        System.out.println("🚀 Server started on port 9091");
+	Thread.currentThread().join();
     }
 }
