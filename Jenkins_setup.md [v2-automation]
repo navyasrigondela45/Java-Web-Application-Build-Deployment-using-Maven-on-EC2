@@ -1,0 +1,232 @@
+# 🚀 Jenkins Setup & Automation Guide
+
+This document explains how the Java application build and deployment was automated using Jenkins.
+
+---
+
+## 📌 Project Overview
+
+This project demonstrates:
+
+* Building a Java application using Maven
+* Automating build & deployment using Jenkins
+* Running the application as a background process on an EC2 instance
+
+---
+
+## 🏗️ Prerequisites
+
+* Java (JDK 11 or above)
+* Maven installed
+* Jenkins installed and running
+* GitHub repository with project code
+* EC2 instance with open ports (8080 for Jenkins, 9090 for application)
+
+---
+
+## ⚙️ Step 1: Install Jenkins
+
+```bash
+yum install java-17-amazon-corretto -y
+sudo wget -O /etc/yum.repos.d/jenkins.repo     https://pkg.jenkins.io/rpm-stable/jenkins.repo
+yum install jenkins -y
+systemctl start jenkins
+systemctl status jenkins
+```
+
+Access Jenkins:
+
+```
+http://<EC2-PUBLIC-IP>:8080
+```
+
+---
+
+## 🔐 Step 2: Unlock Jenkins
+
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+* Paste password in browser
+* Install suggested plugins
+* Create admin user
+
+---
+
+## 🔗 Step 3: Connect GitHub Repository
+
+* Go to Jenkins Dashboard → New Item
+* Select **Freestyle Project**
+* Configure:
+
+  * Source Code Management → Git
+  * Add repository URL (SSH/HTTPS)
+
+---
+
+## ⚙️ Step 4: Configure Build Trigger
+
+* Enable:
+
+  * GitHub webhook trigger
+    OR
+  * Build periodically (optional)
+
+---
+
+## 🛠️ Step 5: Build Configuration
+
+In **Build Section → Execute Shell**, add:
+
+```bash
+cd $WORKSPACE
+mvn clean package
+```
+
+---
+
+## 🚀 Step 6: Deployment Script
+
+Add the following script in Jenkins:
+
+```bash
+cd $WORKSPACE
+
+echo "=== BUILD ==="
+mvn clean package
+
+echo "Stopping old app..."
+pkill -f github-server-1.0.jar || true
+
+sleep 2
+
+echo "Starting new app..."
+
+BUILD_ID=dontKillMe nohup java -jar $WORKSPACE/target/github-server-1.0.jar > $WORKSPACE/app.log 2>&1 &
+
+sleep 5
+
+echo "Verifying process..."
+ps -ef | grep java
+```
+
+---
+
+## 🧠 Explanation of Key Commands
+
+### mvn clean package
+
+* Cleans old build
+* Compiles code
+* Creates JAR file
+
+---
+
+### pkill -f github-server-1.0.jar
+
+* Stops old running application
+* Prevents port conflicts
+
+---
+
+### BUILD_ID=dontKillMe
+
+* Prevents Jenkins from killing the process after build
+
+---
+
+### nohup
+
+* Keeps application running after job completion
+
+---
+
+### &
+
+* Runs process in background
+
+---
+
+### > app.log 2>&1
+
+* Redirects output and errors to log file
+
+---
+
+## 🌐 Step 7: Access Application
+
+After successful build:
+
+```
+http://<EC2-PUBLIC-IP>:9090
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### Application not running
+
+```bash
+ps -ef | grep java
+```
+
+---
+
+### Port not accessible
+
+* Verify Security Group:
+
+  * Port 9090 open
+
+---
+
+### Permission issues
+
+```bash
+sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/<job-name>
+```
+
+---
+
+### Build errors (target folder)
+
+```bash
+rm -rf target
+```
+
+---
+
+### App starts but stops immediately
+
+Ensure Java code includes:
+
+```java
+Thread.currentThread().join();
+```
+
+---
+
+## 🧪 Verification Commands
+
+```bash
+curl http://localhost:9090
+ps -ef | grep java
+```
+
+---
+
+## 📈 Key Learnings
+
+* Jenkins kills background processes by default
+* BUILD_ID=dontKillMe is required for persistent apps
+* File permissions must match Jenkins user
+* Always use absolute paths in Jenkins
+* Debugging logs is critical (app.log)
+
+---
+
+## 🙌 Conclusion
+
+Successfully automated Java application deployment using Jenkins, transforming manual deployment into a continuous delivery workflow.
