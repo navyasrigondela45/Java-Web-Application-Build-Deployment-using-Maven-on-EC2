@@ -42,7 +42,7 @@ public class GitHubServer {
                     + "</head>"
                     + "<body>"
                     + "<h1>🚀 Welcome to My first DevOps Project Using Jenkins</h1>"
-                    + "<p>✨ Built using Java + Maven + Nexus ✨</p>"
+                    + "<p>✨ Built using Java + Maven + Nexus + webhook ✨</p>"
                     + "<a href='https://github.com/navyasrigondela45' target='_blank'>👉 Open My GitHub</a>"
 				    + "<br><br>"
                     + "<a href='https://www.linkedin.com/in/navya-sri-gondela-a60091258' target='_blank'>👉 Open My LinkedIn</a>"
